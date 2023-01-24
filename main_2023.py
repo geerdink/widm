@@ -1,5 +1,11 @@
+import math
+
 import face_recognition
 import cv2
+# import matplotlib.patches as patches
+# from IPython.display import clear_output
+# from matplotlib.pyplot import imshow
+# import matplotlib.pylab as plt
 
 frame_skip = 10
 
@@ -53,6 +59,7 @@ face_encodings = []
 face_names = []
 frame_number = 0
 
+
 p1 = 0
 p2 = 0
 p3 = 0
@@ -64,13 +71,26 @@ p8 = 0
 p9 = 0
 p10 = 0
 
+distances = {
+    # count, total distance
+    "Anke": (0, 0.0),
+    "Annick": (0, 0.0),
+    "Daniel": (0, 0.0),
+    "Froukje": (0, 0.0),
+    "Jurre": (0, 0.0),
+    "Nabil": (0, 0.0),
+    "Ranomi": (0, 0.0),
+    "Sander": (0, 0.0),
+    "Sarah": (0, 0.0),
+    "Soy": (0, 0.0)
+}
+
 # Loading video for face detection
-eps = "S23E01"
+eps = 'S23E02'
 
 # Create an output movie file (make sure resolution/frame rate matches input video!)
-fourcc = cv2.VideoWriter_fourcc(*"XVID")
-output_movie = cv2.VideoWriter(f"episodes/{eps}_tracked_frameskip_{frame_skip}.avi",
-                               fourcc, 25, (960, 540))
+# fourcc = cv2.VideoWriter_fourcc(*"XVID")
+# output_movie = cv2.VideoWriter(f"episodes/{eps}_tracked_frameskip_{frame_skip}.avi", fourcc, 25, (960, 540))
 
 video_capture = cv2.VideoCapture(f"episodes/{eps}.mp4")
 length = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -91,9 +111,9 @@ while video_capture.isOpened():
     # We will search face in every X frames to speed up process.
     frame_count += 1
     if frame_count % 500 == 0:
-        print("{}/{}".format(frame_count, length))
+        print('{}/{}'.format(frame_count, length))
     if frame_count % frame_skip == 0:
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Find all the faces and face encodings in the current frame of video
         rgb_frame = frame[:, :, ::-1]
@@ -103,42 +123,41 @@ while video_capture.isOpened():
         face_names = []
         for face_encoding in face_encodings:
             # See if the face is a match for the known face(s)
-            match = face_recognition.compare_faces(known_faces, face_encoding,
-                                                   tolerance=0.50)
+            match = face_recognition.compare_faces(known_faces, face_encoding, tolerance=0.50)
 
             # If you had more than 2 faces, you could make this logic a lot prettier
             # but I kept it simple for the demo
             name = None
             if match[0]:
-                p1 += 1
-                name = "Anke"
+                #p1 += 1
+                name = 'Anke'
             elif match[1]:
-                p2 += 1
-                name = "Annick"
+                #p2 += 1
+                name = 'Annick'
             elif match[2]:
-                p3 += 1
-                name = "Daniel"
+                #p3 += 1
+                name = 'Daniel'
             elif match[3]:
-                p4 += 1
-                name = "Froukje"
+                #p4 += 1
+                name = 'Froukje'
             elif match[4]:
-                p5 += 1
-                name = "Jurre"
+                #p5 += 1
+                name = 'Jurre'
             elif match[5]:
-                p6 += 1
-                name = "Nabil"
+                #p6 += 1
+                name = 'Nabil'
             elif match[6]:
-                p7 += 1
-                name = "Ranomi"
+                #p7 += 1
+                name = 'Ranomi'
             elif match[7]:
-                p8 += 1
-                name = "Sander"
+                #p8 += 1
+                name = 'Sander'
             elif match[8]:
-                p9 += 1
-                name = "Sarah"
+                #p9 += 1
+                name = 'Sarah'
             elif match[9]:
-                p10 += 1
-                name = "Soy"
+                #p10 += 1
+                name = 'Soy'
 
             face_names.append(name)
 
@@ -146,21 +165,35 @@ while video_capture.isOpened():
             if not name:
                 continue
 
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            middle_horizontal = left + ((right - left) / 2)
+            middle_vertical = top + ((bottom - top) / 2)
 
-            cv2.rectangle(frame, (left, bottom - 25), (right, bottom), (0, 0, 255),
-                          cv2.FILLED)
-            font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.5, (255, 255, 255),
-                        1)
+            # frame is 960x540
+            from_center_horizontal = 480-middle_horizontal
+            from_center_vertical = 270-middle_vertical
 
-        output_movie.write(frame)
+            distance = math.sqrt(from_center_horizontal * from_center_horizontal + from_center_vertical * from_center_vertical)
+
+            distances[name] = (distances[name][0] + 1, distances[name][1] + distance)
+
+            # cv2.rectangle(frame, (left, top), (right, bottom), (0,0, 255),2)
+            #
+            # cv2.rectangle(frame, (left, bottom -25), (right, bottom), (0,0,255), cv2.FILLED)
+            # font = cv2.FONT_HERSHEY_DUPLEX
+            # cv2.putText(frame, name, (left + 6, bottom -6), font, 0.5, (255, 255, 255), 1)
+
+        #print('writing frame {} / {}'.format(frame_number, length))
+        # output_movie.write(frame)
 
 cv2.destroyAllWindows()
 
-stat_eps = {"anke": p1, "annick": p2, "daniel": p3, "froukje": p4, "jurre": p5,
-            "nabil": p6, "ranomi": p7, "sander": p8, "sarah": p9, "soy": p10}
+stat_eps = {'anke':p1, 'annick':p2, 'daniel':p3, 'froukje':p4, 'jurre':p5, 'nabil':p6, 'ranomi':p7, 'sander':p8, 'sarah':p9, 'soy':p10}
 
 print(stat_eps)
 
 print(sorted(stat_eps.items(), reverse=True, key=lambda item: item[1]))
+
+print(distances)
+
+for key in distances.keys():
+    print(key, ":", distances[key][1] / distances[key][0])
